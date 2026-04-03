@@ -1,241 +1,285 @@
 'use client';
 
-/**
- * @fileOverview Tableau de bord principal SaisonPlus AI.
- * Observatoire central de la souveraineté alimentaire par télédétection.
- */
-
-import { Sidebar } from '@/components/dashboard/Sidebar';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { OpportunityCard } from '@/components/dashboard/OpportunityCard';
-import { Badge } from '@/components/ui/badge';
-import { Leaf, Activity, ShieldCheck, Target, Globe, BarChart3, Satellite, ChevronRight, TrendingUp, Sparkles, Zap } from 'lucide-react';
+import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { Leaf, Satellite, Activity, Globe, ChevronRight, Zap, Target, ShieldCheck, Sparkles, TrendingUp, Users, Map as MapIcon, ArrowRight, Cloud } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, limit } from 'firebase/firestore';
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid } from 'recharts';
-import { useState, useEffect } from 'react';
+import { NDVISlider } from '@/components/landing/NDVISlider';
+import { TechStackOrbit } from '@/components/landing/TechStackOrbit';
 
-const chartData = [
-  { month: "Jan", volume: 0.42 },
-  { month: "Fév", volume: 0.45 },
-  { month: "Mar", volume: 0.48 },
-  { month: "Avr", volume: 0.65 },
-  { month: "Mai", volume: 0.74 },
-  { month: "Juin", volume: 0.78 },
-];
-
-const ndviChartConfig = { 
-  volume: { label: "Index NDVI", color: "hsl(var(--primary))" }
-};
-
-export default function Dashboard() {
-  const db = useFirestore();
-  const [mounted, setMounted] = useState(false);
-  const [currentTime, setCurrentTime] = useState("");
-
-  useEffect(() => {
-    setMounted(true);
-    setCurrentTime(new Date().toLocaleTimeString());
-  }, []);
-
-  const opportunitiesQuery = useMemoFirebase(() => {
-    return query(collection(db, 'harvestOpportunities'), orderBy('detectionTimestamp', 'desc'), limit(4));
-  }, [db]);
-
-  const { data: opportunities, isLoading: loadingOpps } = useCollection(opportunitiesQuery);
-
+export default function LandingPage() {
   return (
-    <div className="flex flex-col lg:flex-row h-screen bg-slate-50 overflow-hidden font-sans text-slate-900">
-      <Sidebar />
-      <main className="flex-1 overflow-y-auto p-4 md:p-8 lg:p-12 relative">
-        <div className="max-w-[1600px] mx-auto space-y-6 lg:space-y-10">
-          
-          {/* Header Expert */}
-          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 border-b pb-6 lg:pb-8 border-slate-200">
-            <div className="space-y-2 pt-12 lg:pt-0">
-              <div className="flex items-center gap-2 text-primary font-black text-[10px] uppercase tracking-[0.2em] bg-primary/5 w-fit px-3 py-1 rounded-sm border border-primary/20">
-                <Activity className="w-3 h-3 animate-pulse" /> Surveillance Orbitale Active
-              </div>
-              <h1 className="text-2xl md:text-4xl font-black text-slate-900 tracking-tighter uppercase leading-none">
-                Observatoire <span className="text-primary">Souveraineté</span>
-              </h1>
-              <p className="text-slate-500 font-bold flex items-center gap-2 text-[10px] md:text-xs uppercase tracking-widest">
-                <Globe className="w-4 h-4 text-primary" /> Constellation Copernicus Sentinel-2 | Côte d'Ivoire
-              </p>
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-[#32d74b]/30 overflow-x-hidden">
+
+      {/* --- NAVBAR (GLASSMORPHIA) --- */}
+      <nav className="fixed top-6 left-1/2 -translate-x-1/2 w-[95%] max-w-7xl z-50 px-6 py-4 flex items-center justify-between backdrop-blur-xl bg-white/70 border border-white/20 rounded-[32px] shadow-2xl">
+        <div className="flex items-center gap-2">
+          <div className="w-10 h-10 bg-[#32d74b] rounded-xl flex items-center justify-center text-white shadow-xl shadow-[#32d74b]/30">
+            <Leaf className="w-6 h-6" />
+          </div>
+          <span className="text-2xl font-black tracking-tighter uppercase whitespace-nowrap">SaisonPlus <span className="text-[#32d74b]">AI</span></span>
+        </div>
+        <div className="hidden md:flex items-center gap-8 text-[11px] font-black uppercase tracking-[0.2em] text-slate-500">
+          <a href="#vision" className="hover:text-[#32d74b] transition-colors">Vision</a>
+          <a href="#flux" className="hover:text-[#32d74b] transition-colors">Intelligence</a>
+          <a href="#cockpit" className="hover:text-[#32d74b] transition-colors">Cockpit</a>
+          <a href="#impact" className="hover:text-[#32d74b] transition-colors">Impact</a>
+        </div>
+        <Button asChild className="bg-slate-900 hover:bg-black text-white rounded-2xl px-6 font-black text-[10px] uppercase tracking-widest shadow-xl transition-all hover:scale-105 active:scale-95">
+          <Link href="/dashboard">Cockpit 2.0</Link>
+        </Button>
+      </nav>
+
+      {/* --- HERO SECTION --- */}
+      <section id="vision" className="relative pt-48 pb-32 px-6 overflow-hidden bg-white">
+        {/* Animated Background Decor */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[800px] bg-gradient-to-b from-[#32d74b]/10 to-transparent blur-[120px] pointer-events-none" />
+
+        <div className="max-w-7xl mx-auto text-center relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full bg-white border border-slate-100 mb-10 text-[#32d74b] text-[10px] font-black uppercase tracking-[0.3em] shadow-xl shadow-slate-200/50">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#32d74b] opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#32d74b]"></span>
+              </span>
+              Plateforme 2026 de Sécurité Alimentaire
             </div>
-            
-            <div className="flex items-center justify-between lg:justify-end gap-4">
-              <div className="text-right hidden sm:block">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Mise à jour Station</p>
-                <p className="text-xs font-bold text-slate-700">Aujourd'hui, {mounted ? currentTime : '--:--:--'}</p>
-              </div>
-              <Button asChild className="h-10 lg:h-12 px-6 lg:px-8 bg-primary hover:bg-primary/90 text-white uppercase font-black text-xs tracking-widest shadow-xl shadow-primary/10 transition-all w-full lg:w-auto">
-                <Link href="/analyse">
-                  <Satellite className="w-4 h-4 mr-2" /> Initialiser Nouveau Scan
-                </Link>
+
+            <h1 className="text-6xl md:text-[140px] font-black tracking-[-0.05em] text-slate-900 mb-8 leading-[0.85] uppercase line-clamp-2">
+              Demain se <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#32d74b] via-[#28ad3d] to-[#007629]">Cultive Ici.</span>
+            </h1>
+
+            <p className="text-xl md:text-2xl text-slate-500 max-w-3xl mx-auto mb-12 font-medium leading-relaxed tracking-tight">
+              SaisonPlus AI fusionne l'imagerie orbitale et l'IA générative pour transformer les données spatio-temporelles en souveraineté alimentaire concrète.
+            </p>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-20">
+              <Button asChild size="lg" className="h-16 px-12 bg-[#32d74b] hover:bg-[#28ad3d] text-white rounded-[24px] font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-[#32d74b]/40 transition-all hover:scale-105">
+                <Link href="/dashboard">Explorer le territoire <ChevronRight className="w-5 h-5 ml-2" /></Link>
+              </Button>
+              <Button variant="ghost" size="lg" className="h-16 px-12 rounded-[24px] font-black text-xs uppercase tracking-[0.2em] border-2 border-slate-200">
+                Documentation
               </Button>
             </div>
-          </div>
 
-          {/* Métriques de Télémétrie */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-            {[
-              { title: "Vigueur NDVI Moyenne", value: "0.684", icon: Leaf, color: "text-primary", sub: "+2.4% vs 2024" },
-              { title: "Stress Hydrique Global", value: "54.2%", icon: Activity, color: "text-blue-500", sub: "Rétention stable" },
-              { title: "Pôles Monitorés", value: "06", icon: Target, color: "text-slate-900", sub: "Zones stratégiques" },
-              { title: "Indice de Risque", value: "FAIBLE", icon: ShieldCheck, color: "text-primary", sub: "Disponibilité garantie" }
-            ].map((metric, i) => (
-              <Card key={i} className="border-slate-200 shadow-sm bg-white overflow-hidden group hover:border-primary/30 transition-colors">
-                <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0 p-4">
-                  <CardTitle className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                    {metric.title}
-                  </CardTitle>
-                  <metric.icon className={`w-4 h-4 ${metric.color} opacity-40 group-hover:opacity-100 transition-opacity`} />
-                </CardHeader>
-                <CardContent className="p-4 pt-0">
-                  <div className={`text-2xl md:text-3xl font-black ${metric.color}`}>{metric.value}</div>
-                  <p className="text-[10px] text-slate-400 mt-1 font-bold uppercase">{metric.sub}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-            <div className="lg:col-span-2 space-y-6 lg:space-y-8">
-              <Card className="border-slate-200 shadow-xl bg-white overflow-hidden">
-                <CardHeader className="border-b border-slate-100 pb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 lg:p-6">
-                  <div>
-                    <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-2 text-slate-800">
-                      <BarChart3 className="w-4 h-4 text-primary" /> Dynamique Spectrale Nationale
-                    </CardTitle>
-                    <CardDescription className="text-[10px] font-bold uppercase text-slate-400 mt-1">Comparaison des signatures de biomasse</CardDescription>
-                  </div>
-                  <Badge className="bg-primary/10 text-primary border-none text-[9px] font-black uppercase py-1 px-3">Données Temps Réel</Badge>
-                </CardHeader>
-                <CardContent className="h-[250px] md:h-[320px] p-4 pt-6 lg:p-6 lg:pt-8">
-                  <ChartContainer config={ndviChartConfig}>
-                    <AreaChart data={chartData}>
-                      <defs>
-                        <linearGradient id="colorNdvi" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#22c55e" stopOpacity={0.2}/>
-                          <stop offset="95%" stopColor="#22c55e" stopOpacity={0}/>
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                      <XAxis dataKey="month" stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} />
-                      <YAxis stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} />
-                      <ChartTooltip content={<ChartTooltipContent />} />
-                      <Area type="monotone" dataKey="volume" stroke="#22c55e" fillOpacity={1} fill="url(#colorNdvi)" strokeWidth={3} />
-                    </AreaChart>
-                  </ChartContainer>
-                </CardContent>
-              </Card>
-
-              {/* Rapports IA */}
-              <div className="space-y-4 lg:space-y-6">
-                <div className="flex items-center justify-between px-2">
-                  <h2 className="text-sm font-black uppercase tracking-[0.2em] flex items-center gap-3 text-slate-800">
-                    <Satellite className="w-5 h-5 text-primary" /> Bulletins de Détection Orbitale
-                  </h2>
-                  <Button variant="ghost" className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-primary p-0 h-auto" asChild>
-                    <Link href="/analyse">Voir tout l'historique <ChevronRight className="w-3 h-3 ml-1" /></Link>
-                  </Button>
+            {/* HERO IMAGE */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.5, duration: 1.2 }}
+              className="relative max-w-6xl mx-auto rounded-[40px] overflow-hidden border-[12px] border-white shadow-[0_50px_100px_rgba(0,0,0,0.1)] group"
+            >
+              <img src="/vue-ensemble.png" alt="Intelligence Orbitale" className="w-full h-auto" />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent" />
+              <div className="absolute bottom-10 left-10 text-left">
+                <div className="px-5 py-2 bg-[#32d74b]/80 backdrop-blur-md rounded-full text-white text-[10px] font-black uppercase tracking-widest border border-white/20">
+                  Secteur : Yamoussoukro • Satellite Sentinel-2
                 </div>
-                
-                {loadingOpps ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
-                    {[1, 2].map(i => <div key={i} className="h-64 bg-slate-200 animate-pulse rounded-xl" />)}
-                  </div>
-                ) : opportunities && opportunities.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
-                    {opportunities.map((opp) => (
-                      <div key={opp.id} className="border border-slate-100 shadow-lg hover:shadow-2xl transition-all duration-300 rounded-2xl overflow-hidden bg-white">
-                        <OpportunityCard data={{
-                          ...opp,
-                          zone: opp.zoneName,
-                          estimatedHarvestDate: opp.predictedHarvestDate
-                        }} />
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <Card className="p-8 lg:p-16 text-center border-2 border-dashed border-slate-200 rounded-3xl bg-white/50 backdrop-blur-sm shadow-inner">
-                    <div className="max-w-md mx-auto space-y-6">
-                      <div className="relative inline-block">
-                        <Satellite className="w-16 h-16 text-slate-200 mx-auto" />
-                        <Sparkles className="w-6 h-6 text-primary absolute -top-2 -right-2 animate-bounce" />
-                      </div>
-                      <div className="space-y-2">
-                        <h3 className="text-lg font-black uppercase tracking-tighter text-slate-800">Prêt pour la Surveillance Nationale</h3>
-                        <p className="text-slate-400 font-medium text-xs md:text-sm leading-relaxed">
-                          Aucun diagnostic n'a encore été généré pour vos parcelles.
-                        </p>
-                      </div>
-                      <Button asChild className="bg-primary hover:bg-primary/90 text-white font-black uppercase text-xs tracking-widest h-14 px-10 shadow-xl shadow-primary/20 scale-105 transition-transform hover:scale-110">
-                        <Link href="/analyse">LANCER VOTRE PREMIER SCAN</Link>
-                      </Button>
-                    </div>
-                  </Card>
-                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* --- INTELLIGENCE FLOW --- */}
+      <section id="flux" className="py-32 px-6 bg-slate-50 relative">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-20">
+            <h2 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tighter uppercase mb-6">L'Intelligence <span className="text-[#32d74b]">en Flux</span></h2>
+            <p className="text-slate-500 font-medium text-lg max-w-2xl mx-auto">Du signal cosmique à la décision terrain : notre architecture transforme la complexité spectrale en résilience agricole.</p>
+          </div>
+
+          <div className="relative rounded-[50px] overflow-hidden border-[1px] border-slate-200 shadow-2xl bg-white p-4 md:p-12">
+            <img src="/process.png" alt="Diagramme d'Intelligence" className="w-full h-auto" />
+            <div className="absolute -bottom-10 -right-10 w-64 h-64 bg-[#32d74b]/5 rounded-full blur-3xl" />
+          </div>
+        </div>
+      </section>
+
+      {/* --- NDVI INTERACTIVE ANALYSIS --- */}
+      <section className="py-32 px-6 bg-slate-900 relative">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col lg:flex-row items-center gap-20">
+            <div className="flex-1">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 border border-white/10 mb-8 text-[#32d74b] text-[10px] font-black uppercase tracking-[0.3em]">
+                Analyse Multispectrale
+              </div>
+              <h2 className="text-5xl md:text-7xl font-black text-white mb-8 tracking-tighter leading-none uppercase">
+                Voyez l'invisible <br /> <span className="text-[#32d74b]/50">depuis l'espace.</span>
+              </h2>
+              <p className="text-slate-400 text-lg font-medium leading-relaxed mb-10 max-w-lg">
+                Notre algorithme NDVI traite les bandes spectrales pour détecter le stress hydrique et les carences minérales avant même qu'elles ne soient visibles à l'œil nu.
+              </p>
+
+              <div className="grid grid-cols-2 gap-8">
+                <div className="border-l-2 border-[#32d74b]/30 pl-6">
+                  <p className="text-3xl font-black text-white mb-1">10m</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-[#32d74b]">Précision Sol</p>
+                </div>
+                <div className="border-l-2 border-[#32d74b]/30 pl-6">
+                  <p className="text-3xl font-black text-white mb-1">5 Jours</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-[#32d74b]">Récurrence</p>
+                </div>
               </div>
             </div>
 
-            {/* Side Panel Expert */}
-            <div className="space-y-6 lg:space-y-8">
-              <Card className="bg-primary/5 border-primary/20 border-2 shadow-sm">
-                <CardHeader className="pb-4 p-4 lg:p-6">
-                  <CardTitle className="text-[10px] lg:text-[11px] font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2">
-                    <ShieldCheck className="w-5 h-5" /> Bulletin de Souveraineté
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4 p-4 lg:p-6 pt-0">
-                  <div className="p-4 bg-white rounded-xl border border-primary/10 shadow-inner">
-                    <p className="text-[10px] text-primary font-black uppercase tracking-widest mb-2 flex items-center gap-1">
-                      <TrendingUp className="w-3 h-3" /> Analyse de Sécurité
-                    </p>
-                    <p className="text-xs font-bold text-slate-700 leading-relaxed italic">
-                      "Utilisez l'onglet Analyse pour interroger Sentinel-2B et obtenir un diagnostic précis sur vos zones de production."
-                    </p>
-                  </div>
-                  <Button className="w-full bg-primary hover:bg-primary/90 text-white font-black uppercase text-[10px] tracking-widest h-12 shadow-lg shadow-primary/20" asChild>
-                    <Link href="/analyse">
-                      <Zap className="w-4 h-4 mr-2" /> ACCÉDER AU POSTE D'ANALYSE
-                    </Link>
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <Card className="border-slate-200 shadow-xl bg-white overflow-hidden">
-                <CardHeader className="pb-4 border-b border-slate-100 p-4 lg:p-6">
-                  <CardTitle className="text-[10px] font-black uppercase tracking-widest text-slate-800 flex items-center gap-2">
-                    <Activity className="w-4 h-4 text-primary" /> État des Biosystèmes
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 lg:p-6 space-y-4">
-                  {[
-                    { label: "Végétation Saine", value: 82, color: "bg-green-500" },
-                    { label: "Stress Modéré", value: 12, color: "bg-blue-500" },
-                    { label: "Stress Critique", value: 6, color: "bg-red-500" }
-                  ].map((item, idx) => (
-                    <div key={idx} className="space-y-1.5">
-                      <div className="flex justify-between text-[10px] font-bold uppercase">
-                        <span className="text-slate-500">{item.label}</span>
-                        <span className="text-slate-900">{item.value}%</span>
-                      </div>
-                      <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                        <div className={`h-full ${item.color}`} style={{ width: `${item.value}%` }} />
-                      </div>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
+            <div className="flex-1 w-full">
+              <NDVISlider />
             </div>
           </div>
         </div>
-      </main>
+      </section>
+
+      {/* --- DASHBOARD PREVIEW --- */}
+      <section id="cockpit" className="py-32 px-6 bg-white overflow-hidden">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
+            <div className="lg:col-span-4">
+              <h2 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tighter uppercase mb-8">Cockpit de <br /><span className="text-[#32d74b]">Précision 2.0</span></h2>
+              <p className="text-slate-500 text-lg font-medium leading-relaxed mb-10">Une interface intuitive pour les agronomes et les décideurs. Surveillez les humidités de sol et la biomasse végétale en temps réel sur tout le territoire.</p>
+              <Button asChild className="h-14 px-10 bg-slate-900 hover:bg-black text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl">
+                <Link href="/dashboard">Entrer dans le Dashboard <ArrowRight className="w-4 h-4 ml-2" /></Link>
+              </Button>
+            </div>
+            <div className="lg:col-span-8">
+              <motion.div
+                whileHover={{ scale: 1.01 }}
+                className="relative rounded-[40px] overflow-hidden border-[1px] border-slate-100 shadow-[0_40px_100px_rgba(0,0,0,0.15)]"
+              >
+                <img src="/dashboard.png" alt="Aperçu Dashboard" className="w-full h-auto" />
+              </motion.div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* --- FARMER IMPACT --- */}
+      <section id="impact" className="py-32 px-6 bg-slate-50">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col lg:flex-row items-center gap-20">
+            <div className="flex-1 w-full order-2 lg:order-1">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                className="relative rounded-[50px] overflow-hidden shadow-2xl border-[8px] border-white"
+              >
+                <img src="/homme-champ.png" alt="Impact Agriculteur" className="w-full h-auto" />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent" />
+                <div className="absolute bottom-8 left-8 right-8 text-white">
+                  <p className="text-sm font-bold opacity-80 mb-2 italic">"Grâce à l'IA, je sais quand irriguer avant que les feuilles ne jaunissent. Mon rendement a doublé."</p>
+                  <p className="text-xs font-black uppercase tracking-widest">— Moussa K., Producteur de Maïs</p>
+                </div>
+              </motion.div>
+            </div>
+
+            <div className="flex-1 order-1 lg:order-2">
+              <h2 className="text-5xl md:text-7xl font-black text-slate-900 mb-8 tracking-tighter uppercase leading-none">Intelligence <br /><span className="text-[#32d74b]">à Portée de Main.</span></h2>
+              <p className="text-slate-600 font-medium text-lg mb-10 leading-relaxed">
+                SaisonPlus AI n'est pas seulement pour les labos. C'est un outil de terrain. Nos alertes SMS et notifications PWA guident l'agriculteur en bordure de champ pour une prise de décision instantanée.
+              </p>
+              <div className="space-y-6">
+                <div className="flex items-center gap-6 p-6 bg-white rounded-[24px] border border-slate-100 shadow-sm">
+                  <div className="w-12 h-12 bg-[#32d74b]/10 rounded-xl flex items-center justify-center text-[#32d74b]">
+                    <Zap className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-black uppercase tracking-widest text-slate-900">Alertes Temps Réel</p>
+                    <p className="text-[11px] text-slate-500 font-bold uppercase tracking-widest">Notification par SMS & Push</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-6 p-6 bg-white rounded-[24px] border border-slate-100 shadow-sm">
+                  <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-500">
+                    <Cloud className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-black uppercase tracking-widest text-slate-900">Prévisions Précises</p>
+                    <p className="text-[11px] text-slate-500 font-bold uppercase tracking-widest">Données Météo Localisées</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* --- NATIONAL IMPACT STATS --- */}
+      <section className="py-32 px-6 bg-[#32d74b] text-white">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 text-center">
+            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}>
+              <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <MapIcon className="w-8 h-8" />
+              </div>
+              <h3 className="text-5xl font-black mb-2 tracking-tighter">85k+</h3>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80">Hectares Surveillés</p>
+            </motion.div>
+
+            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+              <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <Users className="w-8 h-8" />
+              </div>
+              <h3 className="text-5xl font-black mb-2 tracking-tighter">12k</h3>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80">Agriculteurs Connectés</p>
+            </motion.div>
+
+            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+              <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <TrendingUp className="w-8 h-8" />
+              </div>
+              <h3 className="text-5xl font-black mb-2 tracking-tighter">24%</h3>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80">Augment. Rendement</p>
+            </motion.div>
+
+            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+              <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <Activity className="w-8 h-8" />
+              </div>
+              <h3 className="text-5xl font-black mb-2 tracking-tighter">4.2M</h3>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80">Données AI / Heure</p>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* --- FOOTER (DARK PREMIUM) --- */}
+      <footer className="py-32 px-6 bg-slate-950 text-white">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start gap-20">
+          <div className="max-w-md">
+            <div className="flex items-center gap-3 mb-8">
+              <Leaf className="w-10 h-10 text-[#32d74b]" />
+              <span className="text-3xl font-black tracking-tighter uppercase italic">SaisonPlus</span>
+            </div>
+            <p className="text-slate-500 text-lg font-medium leading-relaxed mb-8">
+              Sécuriser l'avenir de l'agriculture africaine grâce à la puissance de l'intelligence orbitale et de l'IA générative.
+            </p>
+            <div className="flex gap-4">
+              <div className="w-10 h-10 bg-white/5 rounded-full border border-white/10" />
+              <div className="w-10 h-10 bg-white/5 rounded-full border border-white/10" />
+              <div className="w-10 h-10 bg-white/5 rounded-full border border-white/10" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-20">
+            <div>
+              <p className="text-xs font-black uppercase tracking-widest text-slate-400 mb-8">Plateforme</p>
+              <ul className="space-y-4 text-sm font-bold uppercase tracking-widest text-[#32d74b]">
+                <li><Link href="/dashboard">Dashboard</Link></li>
+                <li><a href="#" className="hover:text-slate-400">Analyse</a></li>
+                <li><a href="#" className="hover:text-slate-400">Marchés</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div className="max-w-7xl mx-auto mt-32 pt-12 border-t border-white/5 text-center text-[10px] text-slate-600 font-black tracking-[0.3em] uppercase">
+          © 2026 SaisonPlus AI • Laboratoire d'Innovation Géospatiale
+        </div>
+      </footer>
     </div>
   );
 }
