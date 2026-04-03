@@ -1,15 +1,15 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Satellite, Zap, Database, Smartphone, Cloud, ShieldCheck } from 'lucide-react';
+import { MaterialIcon } from '@/components/ui/material-icon';
 
 const icons = [
-  { Icon: Satellite, color: 'text-blue-400', label: 'Sentinel-2' },
-  { Icon: Database, color: 'text-emerald-400', label: 'BigQuery' },
-  { Icon: Zap, color: 'text-yellow-400', label: 'Google Genkit' },
-  { Icon: ShieldCheck, color: 'text-indigo-400', label: 'Firebase Auth' },
-  { Icon: Cloud, color: 'text-sky-400', label: 'App Hosting' },
-  { Icon: Smartphone, color: 'text-[#32d74b]', label: 'PWA Mobile' },
+  { iconName: 'satellite_alt', color: 'text-blue-400', label: 'Sentinel-2' },
+  { iconName: 'database', color: 'text-emerald-400', label: 'BigQuery' },
+  { iconName: 'bolt', color: 'text-yellow-400', label: 'Google Genkit' },
+  { iconName: 'shield_person', color: 'text-indigo-400', label: 'Firebase Auth' },
+  { iconName: 'cloud', color: 'text-sky-400', label: 'App Hosting' },
+  { iconName: 'smartphone', color: 'text-[#32d74b]', label: 'PWA Mobile' },
 ];
 
 export function TechStackOrbit() {
@@ -72,7 +72,7 @@ export function TechStackOrbit() {
                  transform: 'translateX(-50%)'
               }}
             >
-              <item.Icon className={`w-6 h-6 ${item.color}`} />
+              <MaterialIcon name={item.iconName} className={`text-2xl ${item.color}`} />
               <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-slate-900 transition-colors">
                 {item.label}
               </span>

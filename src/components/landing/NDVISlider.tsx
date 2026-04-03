@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { motion, useMotionValue, useSpring } from 'framer-motion';
-import { Scan, ThermometerSun, Leaf } from 'lucide-react';
+import { MaterialIcon } from '@/components/ui/material-icon';
 
 export function NDVISlider() {
   const [sliderPos, setSliderPos] = useState(50);
@@ -35,7 +35,7 @@ export function NDVISlider() {
            style={{ clipPath: `inset(0 ${100 - sliderPos}% 0 0)` }}>
         <img src="/field-ndvi.png" alt="Analyse NDVI" className="w-full h-full object-cover" />
         <div className="absolute top-6 right-6 px-4 py-2 bg-[#32d74b]/80 backdrop-blur-md rounded-full text-white text-xs font-bold flex items-center gap-2 border border-white/20">
-            <Leaf className="w-4 h-4 text-white" /> Intelligence NDVI : Santé Végétale
+            <MaterialIcon name="eco" className="text-white text-base" /> Intelligence NDVI : Santé Végétale
         </div>
       </div>
 
@@ -76,7 +76,7 @@ export function NDVISlider() {
             </div>
             <div className="w-1 h-12 bg-white/10 rounded-full" />
             <div className="w-12 h-12 flex items-center justify-center text-[#32d74b]">
-                 <Scan className="w-8 h-8 animate-pulse" />
+                 <MaterialIcon name="center_focus_strong" className="text-4xl animate-pulse" />
             </div>
         </div>
       </div>
