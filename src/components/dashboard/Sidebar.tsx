@@ -2,18 +2,20 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Plus, Map, Sprout, CloudRain, Settings, Search, Menu, Leaf, Globe } from 'lucide-react';
+import { Plus, Map, Sprout, CloudRain, Settings, Menu, Leaf, Globe, LayoutGrid } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { AlertSystem } from './AlertSystem';
 import { useState, useEffect } from 'react';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from '@/components/ui/button';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 
 const navItems = [
   { name: 'Accueil', href: '/', icon: Globe },
   { name: 'Carte des Champs', href: '/dashboard', icon: Map },
-  { name: 'Croissance', href: '/analyse', icon: Sprout },
+  { name: 'Mes Parcelles', href: '/parcelles', icon: LayoutGrid },
+  { name: 'Analyse Orbitale', href: '/analyse', icon: Sprout },
   { name: 'Météorologie', href: '/analyse', icon: CloudRain },
 ];
 
@@ -97,11 +99,12 @@ export function Sidebar() {
       </div>
 
       {/* SETTINGS FOOTER */}
-      <div className="p-4 mt-auto">
-        <Link href="/analyse" className="flex items-center gap-3 p-3 text-sm font-semibold text-slate-500 hover:bg-slate-50 rounded-[14px] transition-colors">
+      <div className="p-4 mt-auto flex items-center gap-2 border-t border-slate-100 dark:border-slate-800">
+        <Link href="/analyse" className="flex-1 flex items-center gap-3 p-3 text-sm font-semibold text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-[14px] transition-colors">
           <Settings className="w-5 h-5" />
           Paramètres
         </Link>
+        <ThemeToggle />
       </div>
     </div>
   );

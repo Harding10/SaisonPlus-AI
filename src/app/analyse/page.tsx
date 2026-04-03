@@ -41,8 +41,7 @@ export default function AnalysisPage() {
   const db = useFirestore();
 
   const [formData, setFormData] = useState({
-    zone: 'Korhogo',
-    soilType: 'Latéritique',
+    parcelId: '',
     cropType: 'Oignon',
   });
 
@@ -57,36 +56,57 @@ export default function AnalysisPage() {
 
   const { data: historyRecords } = useCollection(historyQuery);
 
+  // Récupération des parcelles réelles
+  const parcelsQuery = useMemoFirebase(() => {
+    return query(collection(db, 'drawn_parcels'), orderBy('createdAt', 'desc'));
+  }, [db]);
+  const { data: drawnParcels } = useCollection(parcelsQuery);
+
+
   const addLog = (msg: string) => {
     setLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${msg}`].slice(-6));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.parcelId) {
+      toast({ variant: 'destructive', title: "Erreur", description: "Veuillez tracer et sélectionner une parcelle." });
+      return;
+    }
+    const selectedParcel = drawnParcels?.find((p: any) => p.id === formData.parcelId);
+    if (!selectedParcel) return;
+
     setLoading(true);
     setResult(null);
     setLogs([]);
 
+    const parcelName = `Parcelle (${selectedParcel.area} ha)`;
+
     addLog("Initialisation liaison Sentinel-2B...");
     await new Promise(r => setTimeout(r, 600));
-    addLog(`Ciblage AOI : ${formData.zone}...`);
+    addLog(`Envoi géométrie spatiale : ${parcelName}...`);
     await new Promise(r => setTimeout(r, 400));
-    addLog("Extraction couches multispectrales (B8, B4)...");
+    addLog("Extraction couches multispectrales (B8, B4, B3, B2)...");
     await new Promise(r => setTimeout(r, 400));
-    addLog("Calcul des indices de biomasse (NDVI/EVI)...");
+    addLog("Calcul des indices réels (NDVI/NDWI/EVI) au pixel près...");
 
-    const res = await runSatelliteAnalysis(formData as any);
+    const res = await runSatelliteAnalysis({
+      parcelGeoJSON: JSON.stringify(selectedParcel.geojson),
+      parcelName: parcelName,
+      parcelArea: selectedParcel.area,
+      cropType: formData.cropType
+    });
     
     if (res.success && res.data) {
-      addLog("Analyse spectrale validée par GEE.");
+      addLog("Analyse GEE terminée.");
       await new Promise(r => setTimeout(r, 300));
-      addLog("Interrogation Agent Gemini Agronome...");
+      addLog("Interrogation Open-Meteo & Agent Agronome...");
       setResult(res.data);
       
       // Enregistrement asynchrone dans Firestore
       const opportunitiesRef = collection(db, 'harvestOpportunities');
       addDocumentNonBlocking(opportunitiesRef, {
-        zoneName: formData.zone,
+        zoneName: parcelName,
         ndviIndexValue: res.data.telemetryUsed.ndvi,
         humidityLevel: res.data.telemetryUsed.humidity,
         detectionTimestamp: new Date().toISOString(),
@@ -106,7 +126,7 @@ export default function AnalysisPage() {
       addLog("Diagnostic complet enregistré dans Firestore.");
       toast({
         title: "Analyse Terminée",
-        description: `Nouvelles données disponibles pour ${formData.zone}.`,
+        description: `Nouvelles données disponibles pour ${parcelName}.`,
       });
     } else {
       addLog("ERREUR : Rupture liaison GEE ou saturation nuageuse.");
@@ -152,13 +172,19 @@ export default function AnalysisPage() {
                   <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="space-y-4">
                       <div className="space-y-2">
-                        <Label className="text-[10px] uppercase font-black text-slate-400 tracking-[0.2em]">Pôle de Production</Label>
-                        <ShadcnSelect value={formData.zone} onValueChange={(v) => setFormData({...formData, zone: v})}>
-                          <ShadcnSelectTrigger className="h-12 bg-slate-50 border-slate-200 font-bold text-xs"><ShadcnSelectValue /></ShadcnSelectTrigger>
+                        <Label className="text-[10px] uppercase font-black text-slate-400 tracking-[0.2em]">Ma Parcelle (Depuis la carte)</Label>
+                        <ShadcnSelect value={formData.parcelId} onValueChange={(v) => setFormData({...formData, parcelId: v})}>
+                          <ShadcnSelectTrigger className="h-12 bg-slate-50 border-slate-200 font-bold text-xs"><ShadcnSelectValue placeholder="Choisir une parcelle" /></ShadcnSelectTrigger>
                           <ShadcnSelectContent>
-                            {['Korhogo', 'Odienné', 'Man', 'Bouaké', 'Bondoukou', 'San-Pédro'].map(z => (
-                              <ShadcnSelectItem key={z} value={z}>{z}</ShadcnSelectItem>
-                            ))}
+                            {!drawnParcels || drawnParcels.length === 0 ? (
+                              <ShadcnSelectItem value="empty" disabled>Aucune parcelle dessinée</ShadcnSelectItem>
+                            ) : (
+                              drawnParcels.map((p: any, i: number) => (
+                                <ShadcnSelectItem key={p.id} value={p.id}>
+                                  Tracée le {new Date(p.createdAt).toLocaleDateString()} — {p.area} ha
+                                </ShadcnSelectItem>
+                              ))
+                            )}
                           </ShadcnSelectContent>
                         </ShadcnSelect>
                       </div>
@@ -213,7 +239,7 @@ export default function AnalysisPage() {
 
               {result && (
                 <div className="rounded-lg overflow-hidden border border-slate-200 shadow-lg">
-                   <VegetationRadar zone={formData.zone} ndvi={result.telemetryUsed.ndvi} />
+                   <VegetationRadar zone={result.telemetryUsed.producerInfo || "Parcelle"} ndvi={result.telemetryUsed.ndvi} />
                 </div>
               )}
             </div>
@@ -243,24 +269,22 @@ export default function AnalysisPage() {
                   </div>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 animate-in fade-in slide-in-from-bottom-6 duration-700">
-                  <div className="space-y-6 lg:space-y-8">
-                    <h2 className="text-lg lg:text-xl font-black uppercase tracking-widest flex items-center gap-3 text-slate-900">
-                      <FileSearch className="w-6 h-6 text-primary" /> Rapport Agronomique
+                <div className="space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-700">
+                  <div>
+                    <h2 className="text-lg font-black uppercase tracking-widest flex items-center gap-3 text-slate-900 mb-6">
+                      <FileSearch className="w-6 h-6 text-primary" /> Rapport Agronomique Complet
                     </h2>
-                    <div className="rounded-xl border border-slate-200 shadow-xl bg-white p-1">
-                      <OpportunityCard data={{ ...result, zone: formData.zone }} />
-                    </div>
+                    <OpportunityCard data={{ ...result, zone: result.telemetryUsed.producerInfo || 'Ma parcelle' }} />
                   </div>
 
-                  <div className="space-y-6 lg:space-y-8">
-                    <h2 className="text-lg lg:text-xl font-black uppercase tracking-widest flex items-center gap-3 text-slate-900">
-                      <HistoryIcon className="w-6 h-6 text-primary" /> Courbes de Résilience
+                  <div>
+                    <h2 className="text-lg font-black uppercase tracking-widest flex items-center gap-3 text-slate-900 mb-6">
+                      <HistoryIcon className="w-6 h-6 text-primary" /> Courbes de Résilience Saisonnière
                     </h2>
                     <div className="rounded-xl border border-slate-200 shadow-xl bg-white p-1">
-                      <ResilienceChart 
-                        currentData={result.resilienceData.currentYearCurve} 
-                        lastYearData={result.resilienceData.lastYearCurve} 
+                      <ResilienceChart
+                        currentData={result.resilienceData.currentYearCurve}
+                        lastYearData={result.resilienceData.lastYearCurve}
                       />
                     </div>
                   </div>

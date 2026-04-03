@@ -1,13 +1,13 @@
 'use client';
 
-import { 
-  AreaChart, 
-  Area, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer 
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer
 } from 'recharts';
 import { motion } from 'framer-motion';
 import { TrendingUp, Calendar } from 'lucide-react';
@@ -58,39 +58,39 @@ export function TrendChart({ activeLayer }: { activeLayer: LayerType }) {
           <AreaChart data={MOCK_DATA}>
             <defs>
               <linearGradient id="colorIndex" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={activeColor} stopOpacity={0.15}/>
-                <stop offset="95%" stopColor={activeColor} stopOpacity={0}/>
+                <stop offset="5%" stopColor={activeColor} stopOpacity={0.15} />
+                <stop offset="95%" stopColor={activeColor} stopOpacity={0} />
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-            <XAxis 
-              dataKey="date" 
-              axisLine={false} 
-              tickLine={false} 
+            <XAxis
+              dataKey="date"
+              axisLine={false}
+              tickLine={false}
               tick={{ fontSize: 10, fontWeight: 900, fill: '#94a3b8' }}
               dy={10}
             />
-            <YAxis 
-              hide 
-              domain={[0, 1]} 
+            <YAxis
+              hide
+              domain={[0, 1]}
             />
-            <Tooltip 
-              contentStyle={{ 
-                borderRadius: '16px', 
-                border: 'none', 
+            <Tooltip
+              contentStyle={{
+                borderRadius: '16px',
+                border: 'none',
                 boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
                 padding: '12px'
               }}
               labelStyle={{ fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', marginBottom: '4px' }}
               itemStyle={{ fontSize: '12px', fontWeight: 900, color: '#32d74b' }}
             />
-            <Area 
-              type="monotone" 
-              dataKey={activeLayer} 
-              stroke={activeColor} 
+            <Area
+              type="monotone"
+              dataKey={activeLayer}
+              stroke={activeColor}
               strokeWidth={4}
-              fillOpacity={1} 
-              fill="url(#colorIndex)" 
+              fillOpacity={1}
+              fill="url(#colorIndex)"
               animationDuration={1500}
             />
           </AreaChart>

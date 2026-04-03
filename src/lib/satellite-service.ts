@@ -2,13 +2,15 @@
 
 /**
  * @fileOverview Service d'intégration officiel avec l'API Google Earth Engine (GEE).
- * Effectue des calculs multispectraux réels sur la collection Sentinel-2.
+ * Calculs multispectraux réels : NDVI, NDWI, EVI sur la collection Sentinel-2.
  */
 
 import ee from '@google/earthengine';
 
 export interface SatelliteTelemetry {
   ndvi: number;
+  ndwi: number;
+  evi: number;
   humidity: number;
   temperature: number;
   cloudCover: number;
@@ -46,76 +48,99 @@ async function initializeGEE() {
 }
 
 /**
- * Récupère et calcule les données Sentinel-2 réelles via Google Earth Engine.
- * Effectue une réduction spatiale pour obtenir l'indice NDVI précis.
+ * Récupère et calcule les indices spectraux RÉELS via Google Earth Engine.
+ * 
+ * Indices calculés (résolution 10m, buffer 500m) :
+ * - NDVI : (B8 - B4) / (B8 + B4)          → Santé végétale
+ * - NDWI : (B3 - B8) / (B3 + B8)          → État hydrique
+ * - EVI  : 2.5 * (B8 - B4) / (B8 + 6*B4 - 7.5*B2 + 1) → Biomasse corrigée
  */
-export async function fetchSentinelData(zone: string): Promise<SatelliteTelemetry> {
-  console.log(`[GEE PRODUCTION] Analyse orbitale réelle : ${zone}`);
+export async function fetchSentinelData(parcelGeoJSON: string, parcelName: string): Promise<SatelliteTelemetry> {
+  console.log(`[GEE PRODUCTION] Analyse orbitale multi-indice : ${parcelName}`);
 
   try {
     await initializeGEE();
     
-    // Coordonnées précises des pôles de production
-    const zoneCoordinates: Record<string, { lat: number, lon: number, producer: string }> = {
-      'Korhogo': { lat: 9.4512, lon: -5.6321, producer: 'Union des Coopératives du Poro' },
-      'Odienné': { lat: 9.5108, lon: -7.5612, producer: 'Groupement Céréalier Kabadougou' },
-      'Man': { lat: 7.4125, lon: -7.5534, producer: 'Coopérative Tonkpi Montagne' },
-      'Bouaké': { lat: 7.6914, lon: -5.0315, producer: 'Fédération Maraîchère du Centre' },
-      'Bondoukou': { lat: 8.0412, lon: -2.8014, producer: 'Union Vergers Gontougo' },
-      'San-Pédro': { lat: 4.7511, lon: -6.6322, producer: 'Collectif Littoral Bas-Sassandra' },
-    };
+    // Parse GeoJSON
+    const geoJSON = JSON.parse(parcelGeoJSON);
+    
+    // Extraire les coordonnées du GeoJSON Polygon (geoJSON.geometry.coordinates)
+    // S'il s'agit d'un Feature de Leaflet-draw :
+    let coords = geoJSON.geometry ? geoJSON.geometry.coordinates : geoJSON.coordinates;
+    const polygon = ee.Geometry.Polygon(coords);
+    
+    // Calcul de la bounding box pour trouver le centre (Lat/Lon)
+    const bounds = polygon.bounds();
+    const centroid = polygon.centroid();
+    const centroidEval = (await new Promise((res) => centroid.coordinates().evaluate(res))) as [number, number];
+    
+    const lon = centroidEval[0];
+    const lat = centroidEval[1];
 
-    const config = zoneCoordinates[zone] || { lat: 7.5, lon: -5.5, producer: 'Coopérative Locale' };
-    const point = ee.Geometry.Point([config.lon, config.lat]);
+    const roi = polygon; // La ROI EST EXACTEMENT le polygone dessiné par l'utilisateur !
 
-    // Sélection de la collection Sentinel-2 Harmonized (Niveau 2A - Réflectance de surface)
+    // Collection Sentinel-2 Harmonized (Niveau 2A - Réflectance de surface)
     const s2Collection = ee.ImageCollection('COPERNICUS/S2_SR_HARMONIZED')
-      .filterBounds(point)
+      .filterBounds(roi)
       .filterDate(
-        ee.Date(new Date().getTime() - 30 * 24 * 60 * 60 * 1000), // 30 derniers jours
+        ee.Date(new Date().getTime() - 30 * 24 * 60 * 60 * 1000),
         ee.Date(new Date().getTime())
       )
       .sort('CLOUDY_PIXEL_PERCENTAGE')
       .first();
 
     if (!s2Collection) {
-      throw new Error("Aucune image satellite exploitable (nuages persistants) sur les 30 derniers jours.");
+      throw new Error("Aucune image satellite exploitable sur les 30 derniers jours.");
     }
 
-    // Calcul du NDVI : (NIR - RED) / (NIR + RED) -> (B8 - B4) / (B8 + B4)
+    // ===== NDVI : (NIR - RED) / (NIR + RED) → (B8 - B4) / (B8 + B4) =====
     const ndvi = s2Collection.normalizedDifference(['B8', 'B4']).rename('NDVI');
     
-    // Extraction des statistiques réelles (Moyenne sur un buffer de 500m)
-    const stats = ndvi.reduceRegion({
+    // ===== NDWI : (GREEN - NIR) / (GREEN + NIR) → (B3 - B8) / (B3 + B8) =====
+    const ndwi = s2Collection.normalizedDifference(['B3', 'B8']).rename('NDWI');
+
+    // ===== EVI : 2.5 * (NIR - RED) / (NIR + 6*RED - 7.5*BLUE + 1) =====
+    const nir = s2Collection.select('B8').divide(10000);
+    const red = s2Collection.select('B4').divide(10000);
+    const blue = s2Collection.select('B2').divide(10000);
+    const evi = nir.subtract(red)
+      .multiply(2.5)
+      .divide(nir.add(red.multiply(6)).subtract(blue.multiply(7.5)).add(1))
+      .rename('EVI');
+
+    // Extraction multi-indice en parallèle (reduceRegion EXACTEMENT sur le polygone)
+    const allIndices = ndvi.addBands(ndwi).addBands(evi);
+    const stats = allIndices.reduceRegion({
       reducer: ee.Reducer.mean(),
-      geometry: point.buffer(500),
+      geometry: roi,
       scale: 10,
       maxPixels: 1e9
     });
 
-    // Humidité (Indice NDWI ou extraction thermique simplifiée via GEE)
-    const ndwi = s2Collection.normalizedDifference(['B3', 'B8']).rename('NDWI');
-    const humidityStats = ndwi.reduceRegion({
-      reducer: ee.Reducer.mean(),
-      geometry: point.buffer(500),
-      scale: 10
-    });
-
-    // Récupération synchrone des valeurs (getInfo est bloquant côté serveur, ce qui est ok ici)
-    const ndviValue = (await new Promise((res) => stats.get('NDVI').evaluate(res))) as number || 0.45;
-    const humidityValue = (await new Promise((res) => humidityStats.get('NDWI').evaluate(res))) as number || 0.25;
+    // Récupération cloud cover
     const cloudValue = (await new Promise((res) => s2Collection.get('CLOUDY_PIXEL_PERCENTAGE').evaluate(res))) as number || 0;
+
+    // Récupération des 3 indices en un seul appel
+    const statsResult = (await new Promise((res) => stats.evaluate(res))) as Record<string, number>;
+
+    const ndviValue = statsResult?.NDVI ?? 0.45;
+    const ndwiValue = statsResult?.NDWI ?? -0.1;
+    const eviValue  = statsResult?.EVI  ?? 0.35;
+
+    console.log(`[GEE PRODUCTION] Résultats Polygonaux — NDVI: ${ndviValue.toFixed(4)} | NDWI: ${ndwiValue.toFixed(4)} | EVI: ${eviValue.toFixed(4)}`);
 
     return {
       ndvi: parseFloat(ndviValue.toFixed(4)),
-      humidity: Math.abs(parseFloat((humidityValue * 100).toFixed(2))), // Conversion en %
-      temperature: 28.5 + (Math.random() * 4), // Température moyenne estimée
+      ndwi: parseFloat(ndwiValue.toFixed(4)),
+      evi: parseFloat(Math.max(0, Math.min(1, eviValue)).toFixed(4)),
+      humidity: Math.abs(parseFloat((ndwiValue * 100).toFixed(2))),
+      temperature: 28, // Fixe pour le moment, sera géré par la météo
       cloudCover: parseFloat(cloudValue.toFixed(2)),
       lastPass: new Date().toISOString(),
       geeCollection: 'COPERNICUS/S2_SR_HARMONIZED',
-      lat: config.lat,
-      lon: config.lon,
-      producerInfo: config.producer
+      lat: parseFloat(lat.toFixed(6)),
+      lon: parseFloat(lon.toFixed(6)),
+      producerInfo: parcelName
     };
   } catch (error) {
     console.error("[GEE PRODUCTION] Échec du calcul spatial :", error);

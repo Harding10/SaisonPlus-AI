@@ -17,26 +17,26 @@ interface LayerOption {
 }
 
 const LAYERS: LayerOption[] = [
-  { 
-    id: 'NDVI', 
-    label: 'Santé Végétale', 
-    icon: Leaf, 
-    color: 'text-[#32d74b]', 
-    description: 'Indice de vigueur des plantes' 
+  {
+    id: 'NDVI',
+    label: 'Santé Végétale',
+    icon: Leaf,
+    color: 'text-[#32d74b]',
+    description: 'Indice de vigueur des plantes'
   },
-  { 
-    id: 'NDWI', 
-    label: 'Stress Hydrique', 
-    icon: Droplets, 
-    color: 'text-blue-500', 
-    description: 'Humidité du sol et des feuilles' 
+  {
+    id: 'NDWI',
+    label: 'Stress Hydrique',
+    icon: Droplets,
+    color: 'text-blue-500',
+    description: 'Humidité du sol et des feuilles'
   },
-  { 
-    id: 'EVI', 
-    label: 'Biomasse', 
-    icon: Activity, 
-    color: 'text-orange-500', 
-    description: 'Densité de la canopée' 
+  {
+    id: 'EVI',
+    label: 'Biomasse',
+    icon: Activity,
+    color: 'text-orange-500',
+    description: 'Densité de la canopée'
   },
 ];
 
@@ -67,7 +67,7 @@ export function LayerSwitcher({ onLayerChange }: { onLayerChange: (layer: LayerT
           <div className="p-3 mb-2 border-b border-slate-100">
             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Analyses Satellitaires</span>
           </div>
-          
+
           <div className="space-y-1">
             {LAYERS.map((layer) => {
               const Icon = layer.icon;
