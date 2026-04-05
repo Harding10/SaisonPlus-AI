@@ -1,12 +1,14 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { AlertTriangle, Droplet, Thermometer, Bug, Clock, ArrowRight } from 'lucide-react';
+import { AlertTriangle, Droplet, Thermometer, Bug, Clock, ArrowRight, Shield } from 'lucide-react';
+import { useMemo } from 'react';
 import { cn } from '@/lib/utils';
+import { getSovereigntyStats } from '@/lib/sovereignty-service';
 
 interface Alert {
   id: string;
-  type: 'weather' | 'irrigation' | 'pest';
+  type: 'weather' | 'irrigation' | 'pest' | 'sovereignty';
   severity: 'critical' | 'warning' | 'info';
   title: string;
   description: string;
@@ -14,7 +16,7 @@ interface Alert {
   time: string;
 }
 
-const ALERTS: Alert[] = [
+const STATIC_ALERTS: Alert[] = [
   {
     id: '1',
     type: 'weather',
@@ -53,13 +55,38 @@ const SEVERITY_COLORS = {
 const ICONS = {
   weather: Thermometer,
   irrigation: Droplet,
-  pest: Bug
+  pest: Bug,
+  sovereignty: Shield
 };
 
 export function AlertSystem() {
+  const sovereigntyData = getSovereigntyStats();
+  
+  const allAlerts = useMemo(() => {
+    const sovereigntyAlerts: Alert[] = sovereigntyData
+      .filter((crop) => crop.shortageRisk > 50)
+      .map((crop) => ({
+        id: `sovereignty-${crop.id}`,
+        type: 'sovereignty' as const,
+        severity: crop.status === 'critical' ? 'critical' : crop.status === 'warning' ? 'warning' : 'info',
+        title: `Risque de Pénurie - ${crop.name}`,
+        description: `Risque de pénurie estimé à ${crop.shortageRisk}%. Production actuelle : ${crop.currentProjectedSupply.toLocaleString()} T vs besoin : ${crop.nationalNeedTons.toLocaleString()} T.`,
+        advice: crop.strategicPriority ? 'Augmenter les surfaces cultivées et optimiser les rendements.' : 'Surveiller les prix et diversifier les cultures.',
+        time: 'Temps réel'
+      }));
+
+    const priority: Record<Alert['severity'], number> = {
+      critical: 3,
+      warning: 2,
+      info: 1
+    };
+
+    return [...STATIC_ALERTS, ...sovereigntyAlerts].sort((a, b) => priority[b.severity] - priority[a.severity]);
+  }, [sovereigntyData]);
+
   return (
     <div className="space-y-3">
-      {ALERTS.map((alert) => {
+      {allAlerts.map((alert: Alert) => {
         const Icon = ICONS[alert.type];
         return (
           <motion.div

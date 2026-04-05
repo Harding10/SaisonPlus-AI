@@ -6,6 +6,8 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { MaterialIcon } from '@/components/ui/material-icon';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLanguage } from '@/lib/language-context';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const navItems = [
   { name: 'Carte', href: '/dashboard', icon: 'map' },
@@ -19,6 +21,7 @@ const navItems = [
 export function Header() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  const { language, setLanguage } = useLanguage();
 
   return (
     <>
@@ -58,6 +61,16 @@ export function Header() {
 
           {/* ACTIONS DROITE */}
           <div className="flex items-center gap-1.5">
+            <Select value={language} onValueChange={(value: 'fr' | 'ba' | 'di') => setLanguage(value)}>
+              <SelectTrigger className="w-12 h-8 border-none bg-transparent text-xs font-bold">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="fr">FR</SelectItem>
+                <SelectItem value="ba">BA</SelectItem>
+                <SelectItem value="di">DI</SelectItem>
+              </SelectContent>
+            </Select>
             <Link href="/alertes">
               <button className="relative w-9 h-9 flex items-center justify-center rounded-full active:bg-black/5 transition-colors">
                 <MaterialIcon name="notifications" className="text-[22px] text-black" />

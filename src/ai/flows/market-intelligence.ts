@@ -59,28 +59,29 @@ export const marketIntelligenceFlow = ai.defineFlow(
       console.warn("Genkit Quota Exceeded or Error - Falling back to local strategic logic:", error);
       
       // FALLBACK DATA (Expert Simulation)
-      return {
+      const fallbackData = {
         marketTrends: [
-          { marketName: 'Adjamé (Gros)', crop: input.crops[0]?.type || 'Vivrier', currentPrice: 450, trend: 'stable', demandLevel: 'high' },
-          { marketName: 'Abobo', crop: input.crops[0]?.type || 'Vivrier', currentPrice: 500, trend: 'rising', demandLevel: 'high' },
-          { marketName: 'Yopougon', crop: input.crops[0]?.type || 'Vivrier', currentPrice: 480, trend: 'stable', demandLevel: 'medium' }
+          { marketName: 'Adjamé (Gros)', crop: input.crops[0]?.type || 'Vivrier', currentPrice: 450, trend: 'stable' as const, demandLevel: 'high' as const },
+          { marketName: 'Abobo', crop: input.crops[0]?.type || 'Vivrier', currentPrice: 500, trend: 'rising' as const, demandLevel: 'high' as const },
+          { marketName: 'Yopougon', crop: input.crops[0]?.type || 'Vivrier', currentPrice: 480, trend: 'stable' as const, demandLevel: 'medium' as const }
         ],
         logisticRecommendations: [
           { 
             action: "Privilégier le stockage intermédiaire (Zone tampon)", 
             targetMarket: "Adjamé", 
-            priority: "high", 
+            priority: "high" as const, 
             impact: "Évite l'effondrement des prix par saturation immédiate." 
           },
           { 
             action: "Redirection vers les marchés périphériques", 
             targetMarket: "Anyama", 
-            priority: "medium", 
+            priority: "medium" as const, 
             impact: "Capture d'une marge supérieure due à la rareté locale." 
           }
         ],
         souveraineteNote: "NOTE: Service en mode résilience (Quota API). Les données affichées sont des simulations stratégiques basées sur les flux saisonniers habituels. Sécurité alimentaire stable."
-      };
+      } as const;
+      return fallbackData;
     }
   }
 );

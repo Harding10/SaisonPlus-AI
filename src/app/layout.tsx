@@ -33,6 +33,7 @@ export const metadata: Metadata = {
 
 import { Header } from '@/components/navigation/Header';
 import { QuickActionDock } from '@/components/navigation/QuickActionDock';
+import { LanguageProvider } from '@/lib/language-context';
 
 export default function RootLayout({
   children,
@@ -49,14 +50,16 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased min-h-screen bg-background text-foreground lg:pb-8">
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-          <FirebaseClientProvider>
-            <Header />
-            {children}
-            <QuickActionDock />
-            <Toaster />
-            <OfflineStatus />
-            <ExpertTelemetry />
-          </FirebaseClientProvider>
+          <LanguageProvider>
+            <FirebaseClientProvider>
+              <Header />
+              {children}
+              <QuickActionDock />
+              <Toaster />
+              <OfflineStatus />
+              <ExpertTelemetry />
+            </FirebaseClientProvider>
+          </LanguageProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -10,7 +10,7 @@ import {
   BarChart3,
   TrendingUp
 } from 'lucide-react';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,6 +29,10 @@ import {
   DialogTitle, 
 } from "@/components/ui/dialog";
 import { OpportunityCard } from '@/components/dashboard/OpportunityCard';
+import { getSeasonalData, calculateTrends, seedHistoricalData } from '@/lib/seasonal-history-service';
+
+const TREND_CROPS = ['Riz', 'Maïs', 'Manioc', 'Tomate', 'Oignon'];
+const TREND_REGIONS = ['Abidjan', 'Bouaké', 'Korhogo', 'Man'];
 
 export default function HistoriquePage() {
   const db = useFirestore();
@@ -36,9 +40,23 @@ export default function HistoriquePage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [cropFilter, setCropFilter] = useState('all');
   const [selectedAnalysis, setSelectedAnalysis] = useState<any>(null);
+  const [seasonalTrends, setSeasonalTrends] = useState<Record<number, { avgYield: number; avgPrice: number; avgNdvi: number }>>({});
+  const [selectedTrendCrop, setSelectedTrendCrop] = useState('Riz');
+  const [selectedTrendRegion, setSelectedTrendRegion] = useState('Abidjan');
+  const [loadingTrends, setLoadingTrends] = useState(true);
 
   const opsQuery = useMemoFirebase(() => query(collection(db, 'harvestOpportunities'), orderBy('detectionTimestamp', 'desc')), [db]);
   const { data: analyses, isLoading } = useCollection(opsQuery);
+
+  useEffect(() => {
+    const loadSeasonalTrends = async () => {
+      setLoadingTrends(true);
+      const data = await getSeasonalData(selectedTrendCrop, selectedTrendRegion, 5);
+      setSeasonalTrends(calculateTrends(data));
+      setLoadingTrends(false);
+    };
+    loadSeasonalTrends();
+  }, [selectedTrendCrop, selectedTrendRegion]);
 
   const filteredAnalyses = useMemo(() => {
     if (!analyses) return [];
@@ -127,6 +145,98 @@ export default function HistoriquePage() {
                 </div>
               </motion.div>
             ))}
+          </div>
+
+          {/* Seasonal Trends Section */}
+          <div className="bg-white p-6 rounded-[24px] border border-slate-100 shadow-sm">
+            <div className="flex flex-col gap-4 lg:flex-row items-start justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-[#00d775]/10 rounded-xl">
+                  <TrendingUp className="w-5 h-5 text-[#00d775]" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-[#0c1812] uppercase tracking-tight">Tendances Saisonnières Multi-Années</h3>
+                  <p className="text-sm text-slate-500 font-medium">Évolution des cultures et régions sur 5 ans</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3 w-full lg:w-auto">
+                <Select value={selectedTrendCrop} onValueChange={(value) => setSelectedTrendCrop(value)}>
+                  <SelectTrigger className="h-12 bg-white border-slate-200 shadow-sm text-[10px] uppercase font-black px-4">
+                    <SelectValue placeholder="Culture" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TREND_CROPS.map((crop) => (
+                      <SelectItem key={crop} value={crop}>{crop}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={selectedTrendRegion} onValueChange={(value) => setSelectedTrendRegion(value)}>
+                  <SelectTrigger className="h-12 bg-white border-slate-200 shadow-sm text-[10px] uppercase font-black px-4">
+                    <SelectValue placeholder="Région" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TREND_REGIONS.map((region) => (
+                      <SelectItem key={region} value={region}>{region}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {loadingTrends ? (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-36 rounded-xl bg-slate-100 animate-pulse" />
+                ))}
+              </div>
+            ) : Object.keys(seasonalTrends).length === 0 ? (
+              <div className="rounded-[24px] border border-dashed border-slate-200 bg-slate-50 p-8 text-center">
+                <p className="text-sm font-bold text-slate-500">Aucune donnée historique disponible pour {selectedTrendCrop} / {selectedTrendRegion}.</p>
+                <p className="text-xs text-slate-400 mt-2">Utilisez le bouton de simulation pour remplir la base de données ou sélectionnez une autre région.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {Object.entries(seasonalTrends).sort(([a], [b]) => parseInt(b) - parseInt(a)).slice(0, 5).map(([year, data]) => (
+                  <div key={year} className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-black text-[#0c1812]">{year}</span>
+                      <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{selectedTrendCrop}</span>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-xs">
+                        <span className="text-slate-500">Rendement</span>
+                        <span className="font-bold text-[#0c1812]">{data.avgYield.toFixed(1)} T/ha</span>
+                      </div>
+                      <div className="flex justify-between text-xs">
+                        <span className="text-slate-500">Prix Moyen</span>
+                        <span className="font-bold text-[#0c1812]">{data.avgPrice.toFixed(0)} FCFA/kg</span>
+                      </div>
+                      <div className="flex justify-between text-xs">
+                        <span className="text-slate-500">NDVI</span>
+                        <span className="font-bold text-[#00d775]">{data.avgNdvi.toFixed(2)}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="mt-4 pt-4 border-t border-slate-100">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={async () => {
+                  await seedHistoricalData();
+                  toast({
+                    title: "Données Simulées Ajoutées",
+                    description: "Les tendances historiques ont été peuplées avec des données d'exemple.",
+                  });
+                }}
+                className="text-xs"
+              >
+                Peupler Données Historiques (Dev)
+              </Button>
+            </div>
           </div>
 
           {/* Filtering Bar */}
