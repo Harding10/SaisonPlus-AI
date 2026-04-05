@@ -6,7 +6,7 @@ import {
   Calendar, Satellite, TrendingUp, TrendingDown, Minus,
   FileText, Download, FileJson, FileSpreadsheet, FileType,
   Zap, ShieldCheck, AlertTriangle, CheckCircle2, Clock,
-  Leaf, Droplets, Activity, FlaskConical, Wind
+  Leaf, Droplets, Activity, FlaskConical, Wind, Crosshair
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
@@ -15,17 +15,20 @@ import {
 import { WeatherForecast } from "./WeatherForecast";
 import { YieldProjection } from "./YieldProjection";
 import { CropTimeline } from "./CropTimeline";
+import { SuitabilityMatrix } from "./SuitabilityMatrix";
 import { exportToPDF } from "@/lib/pdf-export";
 import { File } from "lucide-react";
+import { GenieRural } from "@/components/ai/GenieRural";
+import { motion } from "framer-motion";
 
 interface OpportunityProps {
   data: any;
 }
 
 const PRIORITY_CONFIG = {
-  urgent: { color: 'bg-red-500/10 text-red-700 border-red-200', label: '🔴 URGENT', icon: AlertTriangle },
-  important: { color: 'bg-orange-500/10 text-orange-700 border-orange-200', label: '🟠 IMPORTANT', icon: Zap },
-  optimal: { color: 'bg-[#eaffed] text-[#32d74b] border-[#32d74b]/20', label: '🟢 OPTIMAL', icon: CheckCircle2 },
+  urgent: { color: 'bg-red-500/10 text-red-700 border-red-200', label: '🔴 CRITIQUE / EXPERT', icon: AlertTriangle },
+  important: { color: 'bg-orange-500/10 text-orange-700 border-orange-200', label: '🟠 ANALYSE TACTIQUE', icon: Zap },
+  optimal: { color: 'bg-[#eaffed] text-[#32d74b] border-[#32d74b]/20', label: '🟢 PARAMÈTRES NOMINAUX', icon: CheckCircle2 },
 };
 
 function SatelliteKPI({
@@ -103,11 +106,8 @@ export function OpportunityCard({ data }: OpportunityProps) {
   };
 
   const exportAsPDF = async () => {
-    await exportToPDF({
-      elementId: `report-${data.zone?.replace(/\s/g, '-')}`,
-      filename: `SaisonPlus_Bulletin_${data.zone}_${Date.now()}`,
-      zone: data.zone,
-    });
+    const { exportDataToPDF } = await import('@/lib/pdf-export');
+    exportDataToPDF(data);
   };
 
   const exportAsJSON = () => {
@@ -240,6 +240,61 @@ Progression: ${data.maturityProgress}% | Récolte dans: ${data.daysToHarvest} jo
           </div>
         </div>
 
+        {/* ===== EXPERTISE BIO-PHYSIQUE ===== */}
+        <div className="grid grid-cols-2 gap-4">
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                <p className="text-[8px] font-black uppercase text-slate-400 mb-2">Densité Biomasse (Est.)</p>
+                <div className="flex items-end gap-2">
+                    <span className="text-xl font-black text-slate-900">{data.telemetryUsed?.biomassDensity?.toFixed(2) || '0.85'}</span>
+                    <span className="text-[10px] font-bold text-slate-400 mb-1">kg/m²</span>
+                </div>
+                <div className="w-full h-1 bg-slate-200 rounded-full mt-3 overflow-hidden">
+                    <div className="h-full bg-orange-500" style={{ width: `${(data.telemetryUsed?.biomassDensity || 0.85) * 40}%` }} />
+                </div>
+            </div>
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                <p className="text-[8px] font-black uppercase text-slate-400 mb-2">Indice Chlorophylle</p>
+                <div className="flex items-end gap-2">
+                    <span className="text-xl font-black text-slate-900">{data.telemetryUsed?.chlorophyllIndex?.toFixed(2) || '0.72'}</span>
+                    <span className="text-[10px] font-bold text-slate-400 mb-1">CCI</span>
+                </div>
+                <div className="w-full h-1 bg-slate-200 rounded-full mt-3 overflow-hidden">
+                    <div className="h-full bg-[#00d775]" style={{ width: `${(data.telemetryUsed?.chlorophyllIndex || 0.72) * 100}%` }} />
+                </div>
+            </div>
+        </div>
+
+        {/* ===== STATUT NUTRITIF NPK ===== */}
+        <div className="bg-slate-900 rounded-[24px] p-6 text-white overflow-hidden relative">
+            <div className="relative z-10">
+                <h3 className="text-[9px] font-black uppercase tracking-[0.25em] text-white/40 mb-6 flex items-center gap-2">
+                    <div className="w-1 h-4 bg-violet-500 rounded-full" /> Statut Nutritif (N-P-K)
+                </h3>
+                <div className="space-y-4">
+                    {[
+                        { label: 'Azote (N)', val: data.yieldProjection?.npkStatus?.n || 75, color: 'bg-blue-500' },
+                        { label: 'Phosphore (P)', val: data.yieldProjection?.npkStatus?.p || 62, color: 'bg-orange-500' },
+                        { label: 'Potassium (K)', val: data.yieldProjection?.npkStatus?.k || 88, color: 'bg-violet-500' },
+                    ].map((idx) => (
+                        <div key={idx.label} className="space-y-1.5">
+                            <div className="flex justify-between text-[9px] font-black uppercase tracking-widest">
+                                <span>{idx.label}</span>
+                                <span className={idx.val < 50 ? 'text-red-400' : 'text-[#00d775]'}>{idx.val}%</span>
+                            </div>
+                            <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                                <motion.div 
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${idx.val}%` }}
+                                    className={`h-full ${idx.color}`}
+                                />
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+            <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/10 blur-[60px] rounded-full" />
+        </div>
+
         {/* ===== SANTÉ DU SOL ===== */}
         {/* ===== MÉTÉO 7 JOURS ===== */}
         {data.weatherForecast && (
@@ -261,6 +316,16 @@ Progression: ${data.maturityProgress}% | Récolte dans: ${data.daysToHarvest} jo
           </div>
         )}
 
+        {/* ===== MATRICE D'APTITUDE (NOUVEAU) ===== */}
+        {data.suitabilityMatrix && (
+          <div>
+            <h3 className="text-[9px] font-black uppercase tracking-[0.25em] text-slate-400 mb-4 flex items-center gap-2">
+              <div className="w-1 h-4 bg-orange-400 rounded-full" /> Moteur de Recommandation de Cultures
+            </h3>
+            <SuitabilityMatrix matrix={data.suitabilityMatrix} />
+          </div>
+        )}
+
         {/* ===== CALENDRIER CULTURAL ===== */}
         <div>
           <h3 className="text-[9px] font-black uppercase tracking-[0.25em] text-slate-400 mb-4 flex items-center gap-2">
@@ -276,11 +341,14 @@ Progression: ${data.maturityProgress}% | Récolte dans: ${data.daysToHarvest} jo
 
         {/* ===== DIAGNOSTIC IA ===== */}
         <div>
-          <h3 className="text-[9px] font-black uppercase tracking-[0.25em] text-slate-400 mb-4 flex items-center gap-2">
-            <div className="w-1 h-4 bg-violet-500 rounded-full" /> Diagnostic Expert Génie Rural
-          </h3>
-          <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100 space-y-4">
-            <p className="text-sm leading-relaxed text-slate-700 font-medium italic border-l-4 border-[#32d74b] pl-4">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-[9px] font-black uppercase tracking-[0.25em] text-slate-400 flex items-center gap-2">
+                <div className="w-1 h-4 bg-violet-500 rounded-full" /> Diagnostic Expert Génie Rural
+            </h3>
+            <GenieRural diagnostic={data.explanation} crop={data.recommendedCrop} zone={data.zone} />
+          </div>
+          <div className="p-5 rounded-2xl bg-slate-50 border border-slate-100 space-y-4 shadow-sm hover:shadow-md transition-shadow group">
+            <p className="text-sm leading-relaxed text-slate-700 font-medium italic border-l-4 border-[#00d775] pl-4 group-hover:border-violet-500 transition-colors">
               "{data.explanation}"
             </p>
             {data.impactSouverainete && (

@@ -13,6 +13,8 @@ const MapComponent = dynamic(() => import('./InteractiveMap'), {
   )
 });
 
-export function MapWrapper() {
-  return <MapComponent />;
+import type { MapColorMode } from './InteractiveMap';
+
+export function MapWrapper({ triggerDraw, colorMode }: { triggerDraw?: number, colorMode?: MapColorMode }) {
+  return <MapComponent triggerDraw={triggerDraw} colorMode={colorMode} />;
 }

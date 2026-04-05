@@ -20,7 +20,22 @@ interface AnalysisHistoryProps {
   records: AnalysisRecord[];
 }
 
+import { useState, useMemo } from 'react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 export function AnalysisHistory({ records }: AnalysisHistoryProps) {
+  const [filter, setFilter] = useState<string>('all');
+
+  const filteredRecords = useMemo(() => {
+    if (filter === 'all') return records;
+    return records.filter(r => r.recommendedCrop === filter);
+  }, [records, filter]);
+
+  const uniqueCrops = useMemo(() => {
+    const crops = new Set(records.map(r => r.recommendedCrop));
+    return Array.from(crops);
+  }, [records]);
+
   if (!records || records.length === 0) {
     return (
       <div className="text-center py-12 border-2 border-dashed rounded-xl bg-slate-50 border-slate-200">
@@ -31,8 +46,39 @@ export function AnalysisHistory({ records }: AnalysisHistoryProps) {
   }
 
   return (
-    <div className="grid md:grid-cols-1 gap-4">
-      {records.map((record, index) => {
+    <div className="space-y-6">
+      {/* Barre de filtrage */}
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-2">
+          <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                  <History className="w-4 h-4" />
+              </div>
+              <div>
+                  <h3 className="text-xs font-black uppercase tracking-widest text-slate-800">Historique des Scans</h3>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase">{records.length} analyses archivées</p>
+              </div>
+          </div>
+
+          <Select value={filter} onValueChange={setFilter}>
+              <SelectTrigger className="w-full md:w-48 h-10 rounded-xl border-slate-200 bg-white font-black text-[10px] uppercase tracking-widest">
+                  <SelectValue placeholder="Filtrer par culture" />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl shadow-2xl border-slate-100">
+                  <SelectItem value="all" className="text-[10px] font-black uppercase">Toutes les cultures</SelectItem>
+                  {uniqueCrops.map(c => (
+                      <SelectItem key={c} value={c} className="text-[10px] font-bold uppercase">{c}</SelectItem>
+                  ))}
+              </SelectContent>
+          </Select>
+      </div>
+
+      {filteredRecords.length === 0 ? (
+          <div className="text-center py-12 border-2 border-dashed rounded-[32px] bg-slate-50 border-slate-200">
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Aucun scan pour cette culture.</p>
+          </div>
+      ) : (
+          <div className="grid md:grid-cols-1 gap-4">
+            {filteredRecords.map((record, index) => {
         const date = new Date(record.detectionTimestamp);
         const prevRecord = records[index + 1];
         const ndviDiff = prevRecord ? record.ndviIndexValue - prevRecord.ndviIndexValue : 0;
@@ -84,6 +130,8 @@ export function AnalysisHistory({ records }: AnalysisHistoryProps) {
           </Card>
         );
       })}
+    </div>
+    )}
     </div>
   );
 }

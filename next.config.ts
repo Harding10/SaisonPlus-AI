@@ -6,6 +6,12 @@ const withPWA = withPWAInit({
   disable: process.env.NODE_ENV === "development",
   cacheOnFrontEndNav: true,
   aggressiveFrontEndNavCaching: true,
+  fallbacks: {
+    document: "/~offline",
+  },
+  workboxOptions: {
+    disableDevLogs: true,
+  }
 });
 
 const nextConfig: NextConfig = {
