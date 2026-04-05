@@ -5,7 +5,22 @@
  * Calculs multispectraux réels : NDVI, NDWI, EVI sur la collection Sentinel-2.
  */
 
-import ee from '@google/earthengine';export interface SatelliteTelemetry {
+// Import dynamique pour éviter les problèmes de build
+let ee: any = null;
+
+async function loadEE() {
+  if (!ee) {
+    try {
+      ee = (await import('@google/earthengine')).default;
+    } catch (error) {
+      console.warn("Google Earth Engine non disponible:", error);
+      return null;
+    }
+  }
+  return ee;
+}
+
+export interface SatelliteTelemetry {
   ndvi: number;
   ndwi: number;
   evi: number;
@@ -28,6 +43,11 @@ import ee from '@google/earthengine';export interface SatelliteTelemetry {
  * Initialise la connexion à Google Earth Engine en utilisant le compte de service.
  */
 async function initializeGEE() {
+  const eeInstance = await loadEE();
+  if (!eeInstance) {
+    throw new Error("Google Earth Engine non disponible.");
+  }
+
   const serviceAccount = process.env.GEE_SERVICE_ACCOUNT;
   const privateKey = process.env.GEE_PRIVATE_KEY?.replace(/\\n/g, '\n');
 
@@ -37,10 +57,10 @@ async function initializeGEE() {
 
   return new Promise<void>((resolve, reject) => {
     try {
-      ee.data.authenticateViaPrivateKey(
+      eeInstance.data.authenticateViaPrivateKey(
         { client_email: serviceAccount, private_key: privateKey },
         () => {
-          ee.initialize(null, null, () => resolve(), (err: string) => reject(err));
+          eeInstance.initialize(null, null, () => resolve(), (err: string) => reject(err));
         },
         (err: string) => reject(err)
       );
@@ -57,12 +77,42 @@ async function initializeGEE() {
 export async function fetchSentinelData(parcelGeoJSON: string, parcelName: string): Promise<SatelliteTelemetry> {
   console.log(`[GEE PRODUCTION] Analyse orbitale multi-indice & Radar : ${parcelName}`);
 
+  const eeInstance = await loadEE();
+  if (!eeInstance) {
+    // Retourner des données simulées si GEE n'est pas disponible
+    console.warn("GEE non disponible, utilisation de données simulées");
+    return {
+      ndvi: 0.65 + Math.random() * 0.15,
+      ndwi: 0.25 + Math.random() * 0.1,
+      evi: 0.45 + Math.random() * 0.1,
+      sarVV: -12 + Math.random() * 4,
+      sarVH: -18 + Math.random() * 4,
+      soilMoisture: 0.3 + Math.random() * 0.2,
+      ndviHistory: Array.from({length: 6}, (_, i) => ({
+        date: new Date(Date.now() - i * 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        value: 0.6 + Math.random() * 0.2
+      })),
+      sarHistory: Array.from({length: 6}, (_, i) => ({
+        date: new Date(Date.now() - i * 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        value: -15 + Math.random() * 6
+      })),
+      humidity: 65 + Math.random() * 20,
+      temperature: 25 + Math.random() * 10,
+      cloudCover: Math.random() * 30,
+      lastPass: new Date().toISOString(),
+      geeCollection: 'SIMULATION',
+      lat: 0,
+      lon: 0,
+      producerInfo: 'Données simulées (GEE non disponible)'
+    };
+  }
+
   try {
     await initializeGEE();
-    
+
     const geoJSON = JSON.parse(parcelGeoJSON);
     let coords = geoJSON.geometry ? geoJSON.geometry.coordinates : geoJSON.coordinates;
-    const roi = ee.Geometry.Polygon(coords);
+    const roi = eeInstance.Geometry.Polygon(coords);
     
     const centroid = roi.centroid();
     const centroidEval = (await new Promise((res) => centroid.coordinates().evaluate(res))) as [number, number];
@@ -73,9 +123,9 @@ export async function fetchSentinelData(parcelGeoJSON: string, parcelName: strin
     sixMonthsAgo.setMonth(now.getMonth() - 6);
 
     // 1. DONNÉES OPTIQUES (Sentinel-2) - Dernière image sans nuages
-    const s2Collection = ee.ImageCollection('COPERNICUS/S2_SR_HARMONIZED')
+    const s2Collection = eeInstance.ImageCollection('COPERNICUS/S2_SR_HARMONIZED')
       .filterBounds(roi)
-      .filterDate(ee.Date(now.getTime() - 30 * 24 * 60 * 60 * 1000), ee.Date(now.getTime()))
+      .filterDate(eeInstance.Date(now.getTime() - 30 * 24 * 60 * 60 * 1000), eeInstance.Date(now.getTime()))
       .sort('CLOUDY_PIXEL_PERCENTAGE')
       .first();
 
@@ -84,12 +134,12 @@ export async function fetchSentinelData(parcelGeoJSON: string, parcelName: strin
     }
 
     // 2. DONNÉES RADAR (Sentinel-1) - Pour percer les nuages
-    const s1Collection = ee.ImageCollection('COPERNICUS/S1_GRD')
+    const s1Collection = eeInstance.ImageCollection('COPERNICUS/S1_GRD')
       .filterBounds(roi)
-      .filter(ee.Filter.listContains('transmitterReceiverPolarisation', 'VV'))
-      .filter(ee.Filter.listContains('transmitterReceiverPolarisation', 'VH'))
-      .filter(ee.Filter.eq('instrumentMode', 'IW'))
-      .filterDate(ee.Date(now.getTime() - 15 * 24 * 60 * 60 * 1000), ee.Date(now.getTime()))
+      .filter(eeInstance.Filter.listContains('transmitterReceiverPolarisation', 'VV'))
+      .filter(eeInstance.Filter.listContains('transmitterReceiverPolarisation', 'VH'))
+      .filter(eeInstance.Filter.eq('instrumentMode', 'IW'))
+      .filterDate(eeInstance.Date(now.getTime() - 15 * 24 * 60 * 60 * 1000), eeInstance.Date(now.getTime()))
       .first();
 
     // 3. CALCULS DES INDICES OPTIQUES
@@ -106,12 +156,12 @@ export async function fetchSentinelData(parcelGeoJSON: string, parcelName: strin
     for (let i = 0; i < 12; i++) {
         const d = new Date();
         d.setDate(now.getDate() - (i * 15));
-        dates.push(ee.Date(d.getTime()));
+        dates.push(eeInstance.Date(d.getTime()));
     }
 
-    const timeSeriesNDVI = ee.ImageCollection('COPERNICUS/S2_SR_HARMONIZED')
+    const timeSeriesNDVI = eeInstance.ImageCollection('COPERNICUS/S2_SR_HARMONIZED')
       .filterBounds(roi)
-      .filterDate(ee.Date(sixMonthsAgo.getTime()), ee.Date(now.getTime()))
+      .filterDate(eeInstance.Date(sixMonthsAgo.getTime()), eeInstance.Date(now.getTime()))
       .map((img: any) => {
         const val = img.normalizedDifference(['B8', 'B4']).rename('ndvi_value');
         return val.set('system:time_start', img.get('system:time_start'));
@@ -121,7 +171,7 @@ export async function fetchSentinelData(parcelGeoJSON: string, parcelName: strin
     const statsResult = (await new Promise((res) => {
       const allBands = ndvi.addBands(ndwi).addBands(evi);
       const reduced = allBands.reduceRegion({
-        reducer: ee.Reducer.mean(),
+        reducer: eeInstance.Reducer.mean(),
         geometry: roi,
         scale: 10,
         maxPixels: 1e9
@@ -132,7 +182,7 @@ export async function fetchSentinelData(parcelGeoJSON: string, parcelName: strin
     // 6. RÉCUPÉRATION RADAR
     const radarStats = s1Collection ? (await new Promise((res) => {
       const reduced = s1Collection.select(['VV', 'VH']).reduceRegion({
-        reducer: ee.Reducer.mean(),
+        reducer: eeInstance.Reducer.mean(),
         geometry: roi,
         scale: 10,
         maxPixels: 1e9
@@ -143,7 +193,7 @@ export async function fetchSentinelData(parcelGeoJSON: string, parcelName: strin
     // 7. RÉCUPÉRATION SÉRIE TEMPORELLE (Échantillonnage)
     const historyData = (await new Promise((res) => {
         const chartData = timeSeriesNDVI.reduceColumns({
-            reducer: ee.Reducer.toList().repeat(2),
+            reducer: eeInstance.Reducer.toList().repeat(2),
             selectors: ['system:time_start', 'ndvi_value']
         });
         res(chartData);

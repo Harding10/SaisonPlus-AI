@@ -1,25 +1,33 @@
 import { NextResponse } from 'next/server';
-import ee from '@google/earthengine';
 
-// Singleton pour s'assurer qu'EE n'est initialisé qu'une fois
+// Import dynamique pour éviter les problèmes de build
+let ee: any = null;
 let eeInitialized = false;
 
-function initEE() {
-  return new Promise((resolve, reject) => {
-    if (eeInitialized) return resolve(true);
+async function initEE() {
+  if (eeInitialized) return true;
 
-    const rawKey = process.env.GEE_PRIVATE_KEY;
-    if (!rawKey) {
-      console.warn("Pas de clé GEE configurée pour la démo.");
-      return resolve(false); // On résout tout de même pour simuler si pas de clé
-    }
+  try {
+    // Import dynamique de earthengine
+    ee = (await import('@google/earthengine')).default;
+  } catch (error) {
+    console.warn("Google Earth Engine non disponible:", error);
+    return false;
+  }
 
-    // Gérer les retours à la ligne échappés
-    const privateKey = rawKey.replace(/\\n/g, '\n');
-    
+  const rawKey = process.env.GEE_PRIVATE_KEY;
+  if (!rawKey) {
+    console.warn("Pas de clé GEE configurée.");
+    return false;
+  }
+
+  // Gérer les retours à la ligne échappés
+  const privateKey = rawKey.replace(/\\n/g, '\n');
+
+  return new Promise((resolve) => {
     ee.data.authenticateViaPrivateKey(
       {
-         client_email: process.env.GEE_CLIENT_EMAIL,
+         client_email: process.env.GEE_SERVICE_ACCOUNT,
          private_key: privateKey
       },
       () => {
@@ -31,10 +39,16 @@ function initEE() {
             console.log("GEE initialisé.");
             resolve(true);
           },
-          (e: any) => reject(e)
+          (e: any) => {
+            console.error("Erreur d'initialisation GEE:", e);
+            resolve(false);
+          }
         );
       },
-      (e: any) => reject(e)
+      (e: any) => {
+        console.error("Erreur d'authentification GEE:", e);
+        resolve(false);
+      }
     );
   });
 }
