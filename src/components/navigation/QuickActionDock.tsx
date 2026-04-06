@@ -29,7 +29,7 @@ const actions = [
     icon: 'add',
     href: '/dashboard',
     isPrimary: true,
-    activeColor: '#34C759',  // Vert SaisonVivre
+    activeColor: '#34C759',  // Vert SaisonPlus
   },
   {
     id: 'marches',

@@ -10,64 +10,85 @@
     ════════════════════════════════════════════ */
 
     /* Backgrounds */
-    --background: 240 5% 96%;          /* #F2F2F7 — systemGroupedBackground */
-    --foreground: 0 0% 0%;             /* #000000 — label */
-    --card: 0 0% 100%;                 /* #FFFFFF — secondarySystemGroupedBackground */
+    --background: 240 5% 96%;
+    /* #F2F2F7 — systemGroupedBackground */
+    --foreground: 0 0% 0%;
+    /* #000000 — label */
+    --card: 0 0% 100%;
+    /* #FFFFFF — secondarySystemGroupedBackground */
     --card-foreground: 0 0% 0%;
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 0%;
 
     /* iOS Blue — Actions système */
-    --primary: 211 100% 50%;           /* #007AFF — systemBlue */
+    --primary: 211 100% 50%;
+    /* #007AFF — systemBlue */
     --primary-foreground: 0 0% 100%;
 
     /* Secondary / Muted */
-    --secondary: 240 6% 93%;           /* #E5E5EA — systemGray6 */
+    --secondary: 240 6% 93%;
+    /* #E5E5EA — systemGray6 */
     --secondary-foreground: 0 0% 20%;
-    --muted: 240 6% 90%;               /* #D1D1D6 — systemGray5 */
-    --muted-foreground: 240 2% 56%;    /* #8E8E93 — secondaryLabel */
+    --muted: 240 6% 90%;
+    /* #D1D1D6 — systemGray5 */
+    --muted-foreground: 240 2% 56%;
+    /* #8E8E93 — secondaryLabel */
 
-    /* Accent: iOS Green — Identité SaisonVivre (Agriculture) */
-    --accent: 134 61% 49%;             /* #34C759 — systemGreen */
+    /* Accent: iOS Green — Identité SaisonPlus (Agriculture) */
+    --accent: 134 61% 49%;
+    /* #34C759 — systemGreen */
     --accent-foreground: 0 0% 100%;
 
     /* Danger */
-    --destructive: 4 86% 58%;          /* #FF3B30 — systemRed */
+    --destructive: 4 86% 58%;
+    /* #FF3B30 — systemRed */
     --destructive-foreground: 0 0% 100%;
 
-    --border: 240 6% 88%;              /* #C7C7CC — separator */
+    --border: 240 6% 88%;
+    /* #C7C7CC — separator */
     --input: 240 6% 90%;
-    --ring: 211 100% 50%;              /* systemBlue pour focus ring */
-    --radius: 0.875rem;                /* 14px — iOS corner radius */
+    --ring: 211 100% 50%;
+    /* systemBlue pour focus ring */
+    --radius: 0.875rem;
+    /* 14px — iOS corner radius */
   }
 
   /* ═══════════════════════════════════════════
      iOS Dark Mode — iOS 17 Dark System Colors
   ════════════════════════════════════════════ */
   .dark {
-    --background: 0 0% 0%;             /* #000000 — systemBackground dark */
-    --foreground: 0 0% 100%;           /* #FFFFFF — label dark */
-    --card: 0 0% 11%;                  /* #1C1C1E — secondarySystemBackground dark */
+    --background: 0 0% 0%;
+    /* #000000 — systemBackground dark */
+    --foreground: 0 0% 100%;
+    /* #FFFFFF — label dark */
+    --card: 0 0% 11%;
+    /* #1C1C1E — secondarySystemBackground dark */
     --card-foreground: 0 0% 100%;
     --popover: 0 0% 11%;
     --popover-foreground: 0 0% 100%;
 
-    --primary: 211 100% 60%;           /* #409CFF — systemBlue dark */
+    --primary: 211 100% 60%;
+    /* #409CFF — systemBlue dark */
     --primary-foreground: 0 0% 0%;
 
-    --secondary: 0 0% 17%;             /* #2C2C2E — systemGray6 dark */
+    --secondary: 0 0% 17%;
+    /* #2C2C2E — systemGray6 dark */
     --secondary-foreground: 0 0% 100%;
     --muted: 0 0% 17%;
-    --muted-foreground: 240 2% 60%;    /* #8E8E93 */
+    --muted-foreground: 240 2% 60%;
+    /* #8E8E93 */
 
     /* Vert iOS — identité agricole préservée */
-    --accent: 134 61% 49%;             /* #34C759 — systemGreen */
+    --accent: 134 61% 49%;
+    /* #34C759 — systemGreen */
     --accent-foreground: 0 0% 0%;
 
-    --destructive: 4 86% 58%;          /* #FF453A — systemRed dark */
+    --destructive: 4 86% 58%;
+    /* #FF453A — systemRed dark */
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 22%;                /* #38383A — separator dark */
+    --border: 0 0% 22%;
+    /* #38383A — separator dark */
     --input: 0 0% 17%;
     --ring: 211 100% 60%;
   }
@@ -77,6 +98,7 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground font-sans antialiased;
     /* Respect safe area on mobile for iPhones with notch */
@@ -90,6 +112,7 @@
   .pt-app-header {
     padding-top: calc(7.5rem + env(safe-area-inset-top, 0px));
   }
+
   .pb-app-nav {
     /* Hauteur du dock (72px) + marge (12px) + safe-area basse */
     padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
@@ -106,12 +129,12 @@
     @apply border border-border bg-white/80 backdrop-blur-md relative overflow-hidden;
     box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
   }
-  
+
   .hud-border::before {
     content: '';
     @apply absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 border-primary/40;
   }
-  
+
   .hud-border::after {
     content: '';
     @apply absolute bottom-0 right-0 w-2 h-2 border-b-2 border-r-2 border-primary/40;
@@ -130,13 +153,23 @@
 }
 
 @keyframes scanline {
-  0% { top: -100px; }
-  100% { top: 100%; }
+  0% {
+    top: -100px;
+  }
+
+  100% {
+    top: 100%;
+  }
 }
 
 @keyframes spin-slow {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .animate-spin-slow {
@@ -144,65 +177,73 @@
 }
 
 /* Scrollbar Hidden */
-.no-scrollbar::-webkit-scrollbar { display: none; }
-.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
 
 /* Dark mode body handled natively by Tailwind background utility */
 
 /* --- DEV MOCKUPS --- */
-.iphone, .ipad {
-	display: block;
-	color: #fff;
-	text-align: center;
-	font-family: 'SF Pro Display', Helvetica Neue, Arial, sans-serif;
-	letter-spacing: -.022em;
-	font-size: 2vmin;
-	text-shadow: 0 0 0.5em #000;
-	background-color: #000;
-	background-size: auto 200%, cover;
-	background-repeat: no-repeat, no-repeat;
-	border: solid #111;
-	position: relative;
-	box-shadow: 0 0.5em 2em 0.2em rgba(0, 0, 0, 0.33), 0 0 0 0.5px #000 inset;
-	transition: all .1s linear, line-height 0s linear;
-	background-position: 50% 100%, center;
-	transform-origin: bottom center;
+.iphone,
+.ipad {
+  display: block;
+  color: #fff;
+  text-align: center;
+  font-family: 'SF Pro Display', Helvetica Neue, Arial, sans-serif;
+  letter-spacing: -.022em;
+  font-size: 2vmin;
+  text-shadow: 0 0 0.5em #000;
+  background-color: #000;
+  background-size: auto 200%, cover;
+  background-repeat: no-repeat, no-repeat;
+  border: solid #111;
+  position: relative;
+  box-shadow: 0 0.5em 2em 0.2em rgba(0, 0, 0, 0.33), 0 0 0 0.5px #000 inset;
+  transition: all .1s linear, line-height 0s linear;
+  background-position: 50% 100%, center;
+  transform-origin: bottom center;
 }
 
-.iphone:hover, .ipad:hover {
-    color: transparent;
-    text-shadow: 0 0 0em transparent;
-    background-position: 50% -100%, center center;
-    transition: all .15s linear, line-height 5s linear;
-    line-height: 0vmin;
+.iphone:hover,
+.ipad:hover {
+  color: transparent;
+  text-shadow: 0 0 0em transparent;
+  background-position: 50% -100%, center center;
+  transition: all .15s linear, line-height 5s linear;
+  line-height: 0vmin;
 }
 
 .iphone {
-	width: min(100%, calc(60vmin / 2.525));
-	height: calc(2.15 * min(100%, calc(60vmin / 2.525)));
-	line-height: calc(2.165 * min(100%, calc(60vmin / 2.525)));
-	border-width: calc(min(100%, calc(60vmin / 2.525)) / 15.625);
-	border-radius: calc(min(100%, calc(60vmin / 2.525)) / 5.86);
-	background-image: linear-gradient(rgba(0,0,0,0), #111), url("/homme-champ.png");
-	z-index: 200;
+  width: min(100%, calc(60vmin / 2.525));
+  height: calc(2.15 * min(100%, calc(60vmin / 2.525)));
+  line-height: calc(2.165 * min(100%, calc(60vmin / 2.525)));
+  border-width: calc(min(100%, calc(60vmin / 2.525)) / 15.625);
+  border-radius: calc(min(100%, calc(60vmin / 2.525)) / 5.86);
+  background-image: linear-gradient(rgba(0, 0, 0, 0), #111), url("/homme-champ.png");
+  z-index: 200;
 }
 
 @media (max-width: 768px) {
-    .iphone {
-        width: 80%;
-        height: auto;
-        aspect-ratio: 9/19.5;
-        line-height: 150vw;
-    }
+  .iphone {
+    width: 80%;
+    height: auto;
+    aspect-ratio: 9/19.5;
+    line-height: 150vw;
+  }
 }
 
 .ipad {
-	margin-left: 2em;
-	height: calc(1.43 * 60vmin);
-	width: 60vmin;
-	line-height: calc(1.43 * 60vmin);
-	border-width: calc(60vmin / 20);
-	border-radius: calc(60vmin / 14);
-	background-image: linear-gradient(rgba(0,0,0,0), #111), url("/homme-champ.png");
-	z-index: 100;
+  margin-left: 2em;
+  height: calc(1.43 * 60vmin);
+  width: 60vmin;
+  line-height: calc(1.43 * 60vmin);
+  border-width: calc(60vmin / 20);
+  border-radius: calc(60vmin / 14);
+  background-image: linear-gradient(rgba(0, 0, 0, 0), #111), url("/homme-champ.png");
+  z-index: 100;
 }
