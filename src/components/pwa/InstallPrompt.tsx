@@ -44,7 +44,7 @@ function isIosSafari(): boolean {
 /* ─────────────────────────────────────────
    Constantes
 ───────────────────────────────────────── */
-const DISMISS_KEY = 'sv_install_dismissed_at';
+const DISMISS_KEY = 'sp_install_dismissed_at';
 const DISMISS_DAYS = 7;
 const SHOW_DELAY_MS = 3500;
 const NATIVE_PROMPT_TIMEOUT_MS = 4000; // attendre avant de basculer en mode manuel
@@ -174,7 +174,7 @@ export function InstallPrompt() {
                 {/* Icône */}
                 <img
                   src="/icon.png"
-                  alt="SaisonVivre"
+                  alt="SaisonPlus AI"
                   className="w-14 h-14 flex-shrink-0 rounded-2xl"
                   style={{ border: '1px solid rgba(255,255,255,0.1)', objectFit: 'cover' }}
                 />
@@ -182,7 +182,7 @@ export function InstallPrompt() {
                 {/* Texte + boutons */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
-                    <p className="text-white font-bold text-sm leading-tight">Installer SaisonVivre</p>
+                    <p className="text-white font-bold text-sm leading-tight">Installer SaisonPlus AI</p>
                     <button
                       onClick={handleDismiss}
                       className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 -mt-0.5"
@@ -257,7 +257,7 @@ export function InstallPrompt() {
                       <div className="flex items-center gap-3">
                         <img src="/icon.png" alt="" className="w-11 h-11 rounded-[14px]" style={{ objectFit: 'cover' }} />
                         <div>
-                          <p className="text-white font-bold text-[15px]">SaisonVivre</p>
+                          <p className="text-white font-bold text-[15px]">SaisonPlus AI</p>
                           <p className="text-white/40 text-xs">
                             {isIOSBrowser ? 'Installation sur iPhone / iPad' : 'Installation sur Android'}
                           </p>
