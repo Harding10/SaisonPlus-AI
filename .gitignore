@@ -44,5 +44,6 @@ next-env.d.ts
 firebase-debug.log
 firestore-debug.log
 
-*.json
-.env
+# Secrets - clés de service Firebase (NE PAS committer)
+*-firebase-adminsdk-*.json
+saisonplus-ai-*.json

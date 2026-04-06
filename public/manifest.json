@@ -1,0 +1,30 @@
+{
+  "name": "SaisonPlus AI - Intelligence Orbitale",
+  "short_name": "SaisonPlus",
+  "description": "Système d'Exploitation Agricole et Logistique par Télédétection",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#061510",
+  "theme_color": "#00d775",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64",
+      "type": "image/x-icon"
+    }
+  ],
+  "orientation": "portrait-primary",
+  "categories": ["agriculture", "productivity", "business"]
+}
