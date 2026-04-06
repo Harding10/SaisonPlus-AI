@@ -1,30 +1,73 @@
 {
-  "name": "SaisonPlus AI - Intelligence Orbitale",
-  "short_name": "SaisonPlus",
-  "description": "Système d'Exploitation Agricole et Logistique par Télédétection",
+  "id": "/",
+  "name": "SaisonVivre - Intelligence Agricole",
+  "short_name": "SaisonVivre",
+  "description": "Système d'exploitation agricole pour la souveraineté alimentaire en Côte d'Ivoire",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "background_color": "#061510",
-  "theme_color": "#00d775",
+  "theme_color": "#007AFF",
+  "orientation": "portrait-primary",
+  "lang": "fr",
+  "categories": ["agriculture", "productivity", "business"],
   "icons": [
     {
       "src": "/icon.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/icon.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
-      "src": "/favicon.ico",
-      "sizes": "64x64",
-      "type": "image/x-icon"
+      "src": "/icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
-  "orientation": "portrait-primary",
-  "categories": ["agriculture", "productivity", "business"]
+  "screenshots": [
+    {
+      "src": "/dashboard.png",
+      "sizes": "1280x800",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Tableau de bord SaisonVivre"
+    },
+    {
+      "src": "/homme-champ.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Interface mobile SaisonVivre"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "Accéder au tableau de bord",
+      "url": "/dashboard",
+      "icons": [{ "src": "/icon.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Mes Parcelles",
+      "short_name": "Parcelles",
+      "description": "Gérer mes parcelles agricoles",
+      "url": "/parcelles",
+      "icons": [{ "src": "/icon.png", "sizes": "192x192" }]
+    }
+  ]
 }

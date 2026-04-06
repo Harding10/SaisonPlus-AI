@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { FirebaseClientProvider } from '@/firebase';
 import { GenieRural } from '@/components/ai/GenieRural';
 import { OfflineStatus } from '@/components/pwa/OfflineStatus';
+import { InstallPrompt } from '@/components/pwa/InstallPrompt';
 import { ThemeProvider } from 'next-themes';
 import { ExpertTelemetry } from '@/components/dashboard/ExpertTelemetry';
 
@@ -57,6 +58,7 @@ export default function RootLayout({
               <QuickActionDock />
               <Toaster />
               <OfflineStatus />
+              <InstallPrompt />
               <ExpertTelemetry />
             </FirebaseClientProvider>
           </LanguageProvider>
